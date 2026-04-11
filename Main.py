@@ -7,6 +7,7 @@ mat=[[0,0,0,0,0],
 class Game():
      def __init__(self,mat):
           self.mat=mat
+          
 class ouvriers():
      def __init__(self,id):
           self.id=id
