@@ -14,11 +14,11 @@ class Game:
     def afficher(self):
         for ligne in self.mat:
             print(ligne)
-        print("Positions :", positions)
+        print("Positions :", pos)
 
 
 def case_libre(x, y):
-    return (x, y) not in positions.values()
+    return (x, y) not in pos.values()
 
 
 class Ouvrier:
@@ -27,7 +27,7 @@ class Ouvrier:
         self.x = x
         self.y = y
         self.jeu = jeu
-        positions[self.id] = (x, y)
+        pos[self.id] = (x, y)
 
     def deplacer(self, x, y):
         if not self.jeu.est_dans_plateau(x, y):
@@ -40,7 +40,7 @@ class Ouvrier:
                 if self.jeu.mat[x][y] <= self.jeu.mat[self.x][self.y] + 1:
                     self.x = x
                     self.y = y
-                    positions[self.id] = (x, y)
+                    pos[self.id] = (x, y)
                 else:
                     print("Trop haut")
             else:
