@@ -16,6 +16,7 @@ class Game:
             print(ligne)
         print("Positions :", pos)
 
+#rtrdtrdyrd
 
 def case_libre(x, y):
     return (x, y) not in pos.values()
