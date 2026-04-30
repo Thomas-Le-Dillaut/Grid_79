@@ -7,9 +7,9 @@ pos={}#en gros ca stoque les endroits ou tu peux pas move et pour les ouvriers t
 class Game:
     def __init__(self):
         self.mat = [[0]*5 for _ in range(5)]
-        self.positions = {}  # {id: (x, y)}
+        self.positions = {}
         self.ouvriers = []
-        self.joueur_actuel = 0  # 0 ou 1
+        self.joueur_actuel = 0
 
     def est_dans_plateau(self, x, y):
         return 0 <= x < 5 and 0 <= y < 5
@@ -47,7 +47,6 @@ class Game:
         return False
 
     def verifier_defaite(self):
-        # si les ouvriers d'un oueur sont bloqués alors il a automatiquement perdu
         for o in self.ouvriers:
             if o.joueur == self.joueur_actuel:
                 if self.peut_bouger(o):
@@ -83,8 +82,7 @@ class Ouvrier:
         if abs(x - self.x) <= 1 and abs(y - self.y) <= 1:
             if self.jeu.case_libre(x, y):
                 if self.jeu.mat[x][y] <= self.jeu.mat[self.x][self.y] + 1:
-                    
-                    # victoire
+
                     if self.jeu.mat[x][y] == 3:
                         print(f"🎉 Joueur {self.joueur} gagne !")
                         exit()
@@ -120,19 +118,15 @@ class Ouvrier:
         return False
 
 
-
 # Début de la partie
-
 
 jeu = Game()
 
-# Joueur 1
-ouvrier1 = Ouvrier(0, 0, 0, 0, jeu)
-ouvrier2 = Ouvrier(1, 0, 1, 0, jeu)
+Ouvrier(0, 0, 0, 0, jeu)
+Ouvrier(1, 0, 1, 0, jeu)
+Ouvrier(2, 4, 4, 1, jeu)
+Ouvrier(3, 4, 3, 1, jeu)
 
-# Joueur 2
-ouvrier3 = Ouvrier(2, 4, 4, 1, jeu)
-ouvrier4 = Ouvrier(3, 4, 3, 1, jeu)
 
 
 # Boucle du jeu = nombre de tours
@@ -143,4 +137,48 @@ while True:
     if jeu.verifier_defaite():
         break
 
-#RESTE A CONFIGURER SI IL Y A UNE ERREUR
+    # choisir ouvrier
+    oid_str = input("Choisir ouvrier id : ")
+
+    if not oid_str.isdigit():
+        print("Veuillez entrer un nombre")
+        continue
+
+    oid = int(oid_str)
+
+    ouvrier = None
+    for o in jeu.ouvriers:
+        if o.id == oid:
+            ouvrier = o
+            break
+
+    if ouvrier is None:
+        print("Ouvrier introuvable")
+        continue
+
+    # déplacement
+    mx_str = input("Move x : ")
+    my_str = input("Move y : ")
+
+    if not mx_str.isdigit() or not my_str.isdigit():
+        print("Coordonnées invalides")
+        continue
+
+    mx = int(mx_str)
+    my = int(my_str)
+
+    if ouvrier.deplacer(mx, my):
+
+        # construction
+        bx_str = input("Build x : ")
+        by_str = input("Build y : ")
+
+        if not bx_str.isdigit() or not by_str.isdigit():
+            print("Coordonnées invalides")
+            continue
+
+        bx = int(bx_str)
+        by = int(by_str)
+
+        if ouvrier.construire(bx, by):
+            jeu.changer_joueur()
