@@ -1,87 +1,51 @@
-import random
+def score_coup(ouvrier, nx, ny, bx, by):
+    score = 0
+    jeu = ouvrier.jeu
 
-def coups_possibles(ouvrier):
-    coups = []
+    hauteur_actuelle = jeu.mat[ouvrier.x][ouvrier.y]
+    hauteur_nouvelle = jeu.mat[nx][ny]
 
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            nx = ouvrier.x + dx
-            ny = ouvrier.y + dy
-            if not ouvrier.jeu.est_dans_plateau(nx, ny):
-                continue
-            if not case_libre(nx, ny):
-                continue
-            if ouvrier.jeu.mat[nx][ny] > ouvrier.jeu.mat[ouvrier.x][ouvrier.y] + 1:
-                continue
-            for dx2 in [-1, 0, 1]:
-                for dy2 in [-1, 0, 1]:
-                    bx = nx + dx2
-                    by = ny + dy2
-                    if not ouvrier.jeu.est_dans_plateau(bx, by):
-                        continue
-                    if not case_libre(bx, by):
-                        continue
-                    if ouvrier.jeu.mat[bx][by] < 4:
-                        coups.append((nx, ny, bx, by))
-    return coups
+    # Priorité : gagner
+    if hauteur_nouvelle == 3:
+        return 1000
 
-def jouer_aleatoire(ouvrier):
+    # bonus s'il monte
+    score += (hauteur_nouvelle - hauteur_actuelle) * 10
+
+    # bonus s'il construit haut
+    score += jeu.mat[bx][by]
+
+    # Essaie de ne pas aider l'adversaire
+    for adv in ouvrier.jeu.ouvriers_adverses():
+        if abs(adv.x - bx) <= 1 and abs(adv.y - by) <= 1:
+            score -= 5
+
+    return score
+
+
+def jouer_intelligent(ouvrier):
     coups = coups_possibles(ouvrier)
+
     if not coups:
         print("Aucun coup possible")
         return
 
-    coup = random.choice(coups)
-    nx, ny, bx, by = coup
+    # Trier les coups selon leur score
+    meilleurs_coups = []
+    meilleur_score = -float("inf")
+
+    for coup in coups:
+        nx, ny, bx, by = coup
+        s = score_coup(ouvrier, nx, ny, bx, by)
+
+        if s > meilleur_score:
+            meilleur_score = s
+            meilleurs_coups = [coup]
+        elif s == meilleur_score:
+            meilleurs_coups.append(coup)
+
+    # Choisir parmi les meilleurs coups
+    nx, ny, bx, by = random.choice(meilleurs_coups)
+
     ouvrier.deplacer(nx, ny)
     ouvrier.construire(bx, by)
-
-for i in range(10):  # c'est le nombre de tour de la partie en aléatoire
-    print("Tour", i)
-    jouer_aleatoire(ouvrier1)
-    jouer_aleatoire(ouvrier2)
-    jeu.afficher()
-
-
-
-
-import ast
-import random
-
-data = ast.literal_eval(input())
-
-pos = {0: (0, 0), 1: (4, 4)}
-print(f"PLACER {pos}")
-
-if not data:
-    adv = ast.literal_eval(input())
-
-while True:
-    try:
-        ligne = input()
-    except EOFError:
-        break
-
-    if ligne == "END":
-        break
-
-    if ligne.startswith("PLAY "):
-        w, dep, con = ast.literal_eval(ligne[5:])
-
-
-ouvrier = random.choice([0, 1])
-nx = random.randint(0, 4)
-ny = random.randint(0, 4)
-bx = random.randint(0, 4)
-by = random.randint(0, 4)
-
-print(f"PLAY ({ouvrier}, ({nx}, {ny}), ({bx}, {by}))")
-
-
-ouvrier = random.choice([0, 1])
-coups = coups_possibles(ouvrier_obj)  
-if coups:
-    nx, ny, bx, by = random.choice(coups)
-    print(f"PLAY ({ouvrier}, ({nx}, {ny}), ({bx}, {by}))")
-else:
-    print("PLAY (0, (0, 0), (0, 0))")  
