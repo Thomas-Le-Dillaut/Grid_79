@@ -1,9 +1,20 @@
-def score_coup(ouvrier, nx, ny, bx, by):
+import random
+def coups_possibles(ouvrier):
+    coups = []
+    jeu = ouvrier.jeu
+    for dx in (-1,0,1):
+        for dy in (-1,0,1):
+            for bx in (-1,0,1):
+                for by in (-1,0,1):
+                    if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + bx][ouvrier.y + by] < 4:
+                        coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
+        return coups
+def score_coup(ouvrier, dx, dy, bx, by):
     score = 0
     jeu = ouvrier.jeu
 
     hauteur_actuelle = jeu.mat[ouvrier.x][ouvrier.y]
-    hauteur_nouvelle = jeu.mat[nx][ny]
+    hauteur_nouvelle = jeu.mat[dx][dy]
 
     # Priorité : gagner
     if hauteur_nouvelle == 3:
@@ -35,8 +46,8 @@ def jouer_intelligent(ouvrier):
     meilleur_score = -float("inf")
 
     for coup in coups:
-        nx, ny, bx, by = coup
-        s = score_coup(ouvrier, nx, ny, bx, by)
+        dx, dy, bx, by = coup
+        s = score_coup(ouvrier, dx, dy, bx, by)
 
         if s > meilleur_score:
             meilleur_score = s
@@ -45,7 +56,7 @@ def jouer_intelligent(ouvrier):
             meilleurs_coups.append(coup)
 
     # Choisir parmi les meilleurs coups
-    nx, ny, bx, by = random.choice(meilleurs_coups)
+    dx, dy, bx, by = random.choice(meilleurs_coups)
 
-    ouvrier.deplacer(nx, ny)
+    ouvrier.deplacer(dx, dy)
     ouvrier.construire(bx, by)

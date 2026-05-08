@@ -1,9 +1,3 @@
-mat=[[0,0,0,0,0],
-     [0,0,0,0,0],
-     [0,0,0,0,0],
-     [0,0,0,0,0],
-     [0,0,0,0,0]]
-pos={}#en gros ca stoque les endroits ou tu peux pas move et pour les ouvriers tu peux choper leurs coord avec pos[l'id de l'ouvrier](si on update bien pos à chaque move)
 class Game:
     def __init__(self):
         self.mat = [[0]*5 for _ in range(5)] # on initialise la matrice
