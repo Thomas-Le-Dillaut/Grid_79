@@ -31,7 +31,8 @@ def score_coup(ouvrier, dx, dy, bx, by):
     score += jeu.mat[bx][by]
 
     # Essaie de ne pas aider l'adversaire
-    for adv in ouvrier.jeu.ouvriers_adverses():
+    adversaires = [o for o in jeu.ouvriers if o.joueur != ouvrier.joueur]
+    for adv in adversaires:
         if abs(adv.x - bx) <= 1 and abs(adv.y - by) <= 1:
             score -= 5
 
