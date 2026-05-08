@@ -9,7 +9,7 @@ def coups_possibles(ouvrier):
                     if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + bx][ouvrier.y + by] < 4: #validité de la construction et de la position
                         if jeu.case_libre(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + dx][ouvrier.y + dy]-jeu.mat[ouvrier.x][ouvrier.y] <= 1: #pas d'autres joueur + pas trop haut
                             coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
-        return coups
+    return coups
 def score_coup(ouvrier, dx, dy, bx, by):
     score = 0
     jeu = ouvrier.jeu
