@@ -8,9 +8,10 @@ def coups_possibles(ouvrier):
         for dy in (-1,0,1):
             for bx in (-1,0,1):
                 for by in (-1,0,1):
-                    if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + bx][ouvrier.y + by] < 4: #validité de la construction et de la position
-                        if jeu.case_libre(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + dx][ouvrier.y + dy]-jeu.mat[ouvrier.x][ouvrier.y] <= 1: #pas d'autres joueur + pas trop haut
-                            coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
+                    if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.est_dans_plateau(ouvrier.x + bx, ouvrier.y + by):
+                        if jeu.mat[ouvrier.x + bx][ouvrier.y + by] < 4: # pas de construction sur un dome
+                            if jeu.case_libre(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + dx][ouvrier.y + dy]-jeu.mat[ouvrier.x][ouvrier.y] <= 1: #pas d'autres joueur + pas trop haut
+                                coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
     return coups
 def score_coup(ouvrier, dx, dy, bx, by):
     score = 0
@@ -89,7 +90,7 @@ while True:
         jouer_intelligent()  # Si c’est le tour du bot, il joue automatiquement.
         jeu.changer_joueur()  # Passe au joueur suivant.
         continue
-    
+
     oid_str = input("Choisir ouvrier id : ")  # Demande quel ouvrier jouer.
 
     if not oid_str.isdigit():
