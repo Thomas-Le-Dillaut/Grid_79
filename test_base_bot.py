@@ -1,5 +1,6 @@
 import random
 from Main import *
+bot_joueur = 1  # Définir le joueur contrôlé par le bot
 def coups_possibles(ouvrier):
     coups = []
     jeu = ouvrier.jeu
@@ -64,3 +65,70 @@ def jouer_intelligent():
 
             ouvrier.deplacer(dx, dy)
             ouvrier.construire(bx, by)
+
+# Début de la partie
+
+jeu = Game()
+
+Ouvrier(0, 0, 0, 0, jeu)
+Ouvrier(1, 0, 1, 0, jeu)
+Ouvrier(2, 4, 4, 1, jeu)
+Ouvrier(3, 4, 3, 1, jeu)
+
+
+
+# Boucle du jeu = nombre de tours
+
+while True:
+    jeu.afficher()  # Affiche l’état actuel du jeu.
+
+    if jeu.verifier_defaite():
+        break  # Arrête la partie si un joueur ne peut plus jouer.
+
+    oid_str = input("Choisir ouvrier id : ")  # Demande quel ouvrier jouer.
+
+    if not oid_str.isdigit():
+        print("Veuillez entrer un nombre")  # Vérifie la validité de l’entrée.
+        continue
+
+    oid = int(oid_str)
+
+    ouvrier = None
+    for o in jeu.ouvriers:
+        if o.id == oid:
+            ouvrier = o  # Recherche l’ouvrier correspondant.
+            break
+
+    if ouvrier is None:
+        print("Ouvrier introuvable")  # Vérifie que l’ouvrier existe.
+        continue
+    
+    if jeu.joueur_actuel == bot_joueur:  # Si c’est le tour du bot, il joue automatiquement.
+        jouer_intelligent()  # Si c’est le tour du bot, il joue automatiquement.
+        jeu.changer_joueur()  # Passe au joueur suivant.
+        continue
+
+    mx_str = input("Move x : ")
+    my_str = input("Move y : ")
+
+    if not mx_str.isdigit() or not my_str.isdigit():
+        print("Coordonnées invalides")  # Vérifie la saisie.
+        continue
+
+    mx = int(mx_str)
+    my = int(my_str)
+
+    if ouvrier.deplacer(mx, my):
+
+        bx_str = input("Build x : ")
+        by_str = input("Build y : ")
+
+        if not bx_str.isdigit() or not by_str.isdigit():
+            print("Coordonnées invalides")  # Vérifie la construction.
+            continue
+
+        bx = int(bx_str)
+        by = int(by_str)
+
+        if ouvrier.construire(bx, by):
+            jeu.changer_joueur()  # Passe au joueur suivant.
