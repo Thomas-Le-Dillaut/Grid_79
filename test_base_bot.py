@@ -68,6 +68,7 @@ def jouer_intelligent():
             ouvrier.deplacer(dx, dy)
             ouvrier.construire(bx, by)
 
+
 # Début de la partie
 
 jeu = Game()
