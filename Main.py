@@ -1,3 +1,5 @@
+from test_base_bot import jouer_intelligent
+bot_joueur = 1  # Définir le joueur contrôlé par le bot
 class Game:
     def __init__(self):
         self.mat = [[0]*5 for _ in range(5)] # on initialise la matrice
@@ -146,6 +148,11 @@ while True:
 
     if ouvrier is None:
         print("Ouvrier introuvable")  # Vérifie que l’ouvrier existe.
+        continue
+    
+    if jeu.joueur_actuel == bot_joueur:  # Si c’est le tour du bot, il joue automatiquement.
+        jouer_intelligent()  # Si c’est le tour du bot, il joue automatiquement.
+        jeu.changer_joueur()  # Passe au joueur suivant.
         continue
 
     mx_str = input("Move x : ")
