@@ -1,4 +1,5 @@
 import random
+from Main import *
 def coups_possibles(ouvrier):
     coups = []
     jeu = ouvrier.jeu
@@ -35,29 +36,30 @@ def score_coup(ouvrier, dx, dy, bx, by):
     return score
 
 
-def jouer_intelligent(ouvrier):
-    coups = coups_possibles(ouvrier)
+def jouer_intelligent():
+    for ouvrier in jeu.ouvriers:
+        coups = coups_possibles(ouvrier)
 
-    if not coups:
-        print("Aucun coup possible")
-        return
+        if not coups:
+            print("Aucun coup possible")
+            return
 
-    # Trier les coups selon leur score
-    meilleurs_coups = []
-    meilleur_score = -float("inf")
+        # Trier les coups selon leur score
+        meilleurs_coups = []
+        meilleur_score = -float("inf")
 
-    for coup in coups:
-        dx, dy, bx, by = coup
-        s = score_coup(ouvrier, dx, dy, bx, by)
+        for coup in coups:
+            dx, dy, bx, by = coup
+            s = score_coup(ouvrier, dx, dy, bx, by)
 
-        if s > meilleur_score:
-            meilleur_score = s
-            meilleurs_coups = [coup]
-        elif s == meilleur_score:
-            meilleurs_coups.append(coup)
+            if s > meilleur_score:
+                meilleur_score = s
+                meilleurs_coups = [coup]
+            elif s == meilleur_score:
+                meilleurs_coups.append(coup)
 
-    # Choisir parmi les meilleurs coups
-    dx, dy, bx, by = random.choice(meilleurs_coups)
+        # Choisir parmi les meilleurs coups
+        dx, dy, bx, by = random.choice(meilleurs_coups)
 
-    ouvrier.deplacer(dx, dy)
-    ouvrier.construire(bx, by)
+        ouvrier.deplacer(dx, dy)
+        ouvrier.construire(bx, by)
