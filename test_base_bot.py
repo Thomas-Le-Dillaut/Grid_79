@@ -85,6 +85,11 @@ while True:
     if jeu.verifier_defaite():
         break  # Arrête la partie si un joueur ne peut plus jouer.
 
+    if jeu.joueur_actuel == bot_joueur:  # Si c’est le tour du bot, il joue automatiquement.
+        jouer_intelligent()  # Si c’est le tour du bot, il joue automatiquement.
+        jeu.changer_joueur()  # Passe au joueur suivant.
+        continue
+    
     oid_str = input("Choisir ouvrier id : ")  # Demande quel ouvrier jouer.
 
     if not oid_str.isdigit():
@@ -101,11 +106,6 @@ while True:
 
     if ouvrier is None:
         print("Ouvrier introuvable")  # Vérifie que l’ouvrier existe.
-        continue
-    
-    if jeu.joueur_actuel == bot_joueur:  # Si c’est le tour du bot, il joue automatiquement.
-        jouer_intelligent()  # Si c’est le tour du bot, il joue automatiquement.
-        jeu.changer_joueur()  # Passe au joueur suivant.
         continue
 
     mx_str = input("Move x : ")
