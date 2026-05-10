@@ -11,7 +11,10 @@ def coups_possibles(ouvrier):
                     if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.est_dans_plateau(ouvrier.x + bx, ouvrier.y + by):
                         if jeu.mat[ouvrier.x + bx][ouvrier.y + by] < 4: # pas de construction sur un dome
                             if jeu.case_libre(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + dx][ouvrier.y + dy]-jeu.mat[ouvrier.x][ouvrier.y] <= 1: #pas d'autres joueur + pas trop haut
-                                coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
+                                if (ouvrier.x + dx, ouvrier.y + dy) != (ouvrier.x, ouvrier.y) and (ouvrier.x + bx, ouvrier.y + by) != (ouvrier.x, ouvrier.y): #pas de rester sur place
+                                    if jeu.case_libre(ouvrier.x + bx, ouvrier.y + by): #pas de construction sur un autre ouvrier
+                                        if (ouvrier.x + bx, ouvrier.y + by) != (ouvrier.x + dx, ouvrier.y + dy): #pas de construire sur la case où on va se déplacer
+                                            coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
     return coups
 def score_coup(ouvrier, dx, dy, bx, by):
     score = 0
@@ -63,11 +66,11 @@ def jouer_intelligent():
                 elif s == meilleur_score:
                     meilleurs_coups.append(coup)
 
-            # Choisir parmi les meilleurs coups
-            dx, dy, bx, by = random.choice(meilleurs_coups)
-            print(f"Play ({o.id}, ({dx}, {dy}), ({bx}, {by}))")
-            ouvrier.deplacer(dx, dy)
-            ouvrier.construire(bx, by)
+    # Choisir parmi les meilleurs coups
+    dx, dy, bx, by = meilleurs_coups[0]  
+    print(f"Play ({o.id}, ({dx}, {dy}), ({bx}, {by}))")
+    ouvrier.deplacer(dx, dy)
+    ouvrier.construire(bx, by)
 
 
 # Début de la partie
