@@ -5,7 +5,7 @@ def coups_possibles(ouvrier):
     coups = []
     jeu = ouvrier.jeu
     for dx in (-1,0,1):
-        for dy in (-1,0,1):
+        for dy in (-1,0,1): 
             for bx in (-1,0,1):
                 for by in (-1,0,1):
                     if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.est_dans_plateau(ouvrier.x + bx + dx, ouvrier.y + by + dy):
@@ -125,17 +125,23 @@ while True:
     mx = int(mx_str)
     my = int(my_str)
 
-    if ouvrier.deplacer(mx, my):
+    if mx == ouvrier.x and my == ouvrier.y:
+        print("Pas de déplacement")  # Empêche de rester sur place.
+        continue
+    
 
-        bx_str = input("Build x : ")
-        by_str = input("Build y : ")
+    bx_str = input("Build x : ")
+    by_str = input("Build y : ")
 
-        if not bx_str.isdigit() or not by_str.isdigit():
-            print("Coordonnées invalides")  # Vérifie la construction.
-            continue
+    if not bx_str.isdigit() or not by_str.isdigit():
+        print("Coordonnées invalides")  # Vérifie la construction.
+        continue
 
-        bx = int(bx_str)
-        by = int(by_str)
+    bx = int(bx_str)
+    by = int(by_str)
 
-        if ouvrier.construire(bx, by):
+    if ouvrier.deplacer(mx, my): 
+        if ouvrier.construire(bx, by) :
             jeu.changer_joueur()  # Passe au joueur suivant.
+        else:
+            ouvrier.deplacer(ouvrier.x, ouvrier.y)  # Annule le déplacement si la construction échoue.
