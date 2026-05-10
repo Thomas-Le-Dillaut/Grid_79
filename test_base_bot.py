@@ -8,13 +8,13 @@ def coups_possibles(ouvrier):
         for dy in (-1,0,1):
             for bx in (-1,0,1):
                 for by in (-1,0,1):
-                    if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.est_dans_plateau(ouvrier.x + bx, ouvrier.y + by):
-                        if jeu.mat[ouvrier.x + bx][ouvrier.y + by] < 4: # pas de construction sur un dome
+                    if jeu.est_dans_plateau(ouvrier.x + dx, ouvrier.y + dy) and jeu.est_dans_plateau(ouvrier.x + bx + dx, ouvrier.y + by + dy):
+                        if jeu.mat[ouvrier.x + dx + bx][ouvrier.y + dy + by] < 4: # pas de construction sur un dome
                             if jeu.case_libre(ouvrier.x + dx, ouvrier.y + dy) and jeu.mat[ouvrier.x + dx][ouvrier.y + dy]-jeu.mat[ouvrier.x][ouvrier.y] <= 1: #pas d'autres joueur + pas trop haut
-                                if (ouvrier.x + dx, ouvrier.y + dy) != (ouvrier.x, ouvrier.y) and (ouvrier.x + bx, ouvrier.y + by) != (ouvrier.x, ouvrier.y): #pas de rester sur place
-                                    if jeu.case_libre(ouvrier.x + bx, ouvrier.y + by): #pas de construction sur un autre ouvrier
-                                        if (ouvrier.x + bx, ouvrier.y + by) != (ouvrier.x + dx, ouvrier.y + dy): #pas de construire sur la case où on va se déplacer
-                                            coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + bx, ouvrier.y + by))
+                                if (ouvrier.x + dx, ouvrier.y + dy) != (ouvrier.x, ouvrier.y) and (ouvrier.x + dx, ouvrier.y + dy) != (ouvrier.x, ouvrier.y): #pas de rester sur place
+                                    if jeu.case_libre(ouvrier.x + dx + bx, ouvrier.y + dy + by): #pas de construction sur un autre ouvrier
+                                        if not bx==0 and by==0: #pas de construire sur la case où on va se déplacer
+                                            coups.append((ouvrier.x + dx, ouvrier.y + dy, ouvrier.x + dx + bx, ouvrier.y + dy + by))
     return coups
 def score_coup(ouvrier, dx, dy, bx, by):
     score = 0
