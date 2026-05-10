@@ -48,8 +48,29 @@ class Game:
         return True # le joueur est bloqué
 
 
-import tkinter as tk
-from tkinter import messagebox
+import sys
+import subprocess
+
+try:
+    import tkinter as tk
+    from tkinter import messagebox
+except ImportError:
+    install_candidates = ["tk", "tkinter", "python-tk"]
+    installed = False
+    for candidate in install_candidates:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", candidate])
+            import tkinter as tk
+            from tkinter import messagebox
+            installed = True
+            break
+        except Exception:
+            continue
+    if not installed:
+        raise ImportError(
+            "Tkinter n'est pas installé et l'installation automatique a échoué. "
+            "Installez Tkinter manuellement ou utilisez un Python qui inclut Tk."
+        )
 import random
 
 class Ouvrier:
@@ -197,8 +218,11 @@ class Grid3DView:
         self.selected_worker = None
         self.move_target = None
         self.build_target = None
-        self.game_over = False
         self.step = "select_worker"
+        self.game_over = False
+        self.mode = "choose_start"
+        self.start_positions = []
+        self.start_next_player = 0
         self.height_colors = ["#e0e0e0", "#a0a0a0", "#707070", "#404040", "#101010"]
         self.root = tk.Tk()
         self.root.title("Grid 79 - Vue top-down")
@@ -273,14 +297,18 @@ class Grid3DView:
             self.canvas.create_oval(cx - radius - 4, cy - radius - 4, cx + radius + 4, cy + radius + 4, outline="#ffff66", width=3)
 
     def update_labels(self):
-        texte = f"Joueur actuel : {self.jeu.joueur_actuel}\n"
-        texte += "Tour du bot\n" if self.jeu.joueur_actuel == self.bot_joueur else "Tour du joueur humain\n"
-        if self.step == "select_worker":
-            hint = "Cliquez sur un ouvrier de votre joueur."
-        elif self.step == "select_move":
-            hint = "Choisissez une case voisine valide pour déplacer l’ouvrier."
+        if self.mode == "choose_start":
+            texte = f"Placement de départ - joueur {self.start_next_player}\n"
+            hint = "Cliquez sur une case vide pour placer un ouvrier de départ."
         else:
-            hint = "Choisissez une case adjacente pour construire."
+            texte = f"Joueur actuel : {self.jeu.joueur_actuel}\n"
+            texte += "Tour du bot\n" if self.jeu.joueur_actuel == self.bot_joueur else "Tour du joueur humain\n"
+            if self.step == "select_worker":
+                hint = "Cliquez sur un ouvrier de votre joueur."
+            elif self.step == "select_move":
+                hint = "Choisissez une case voisine valide pour déplacer l’ouvrier."
+            else:
+                hint = "Choisissez une case adjacente pour construire."
         self.status.config(text=texte)
         self.hint.config(text=hint)
 
@@ -357,10 +385,21 @@ class Grid3DView:
     def on_click(self, event):
         if self.game_over:
             return
-        if self.jeu.verifier_defaite():
-            return
         cell = self.point_to_cell(event.x, event.y)
         if cell is None:
+            return
+        if self.mode == "choose_start":
+            if self.is_cell_free_for_start(cell):
+                self.start_positions.append((cell[0], cell[1], self.start_next_player))
+                if len(self.start_positions) >= 4:
+                    self.finish_start_positions()
+                else:
+                    self.start_next_player = 1 - self.start_next_player
+                    if self.start_next_player == self.bot_joueur:
+                        self.root.after(100, self.select_bot_start_position)
+                self.draw()
+            return
+        if self.jeu.verifier_defaite():
             return
         if self.jeu.joueur_actuel == self.bot_joueur:
             return
@@ -418,12 +457,57 @@ class Grid3DView:
                 return worker
         return None
 
+    def is_cell_free_for_start(self, cell):
+        x, y = cell
+        if any((worker.x, worker.y) == cell for worker in self.jeu.ouvriers):
+            return False
+        if any(px == x and py == y for px, py, _ in self.start_positions):
+            return False
+        return True
+
+    def draw_start_positions(self):
+        for x, y, joueur in self.start_positions:
+            x0 = self.grid_x + x * self.tile
+            y0 = self.grid_y + y * self.tile
+            cx = x0 + self.tile / 2
+            cy = y0 + self.tile / 2
+            color = "#ff6b6b" if joueur == 0 else "#4db8ff"
+            self.canvas.create_oval(cx - 14, cy - 14, cx + 14, cy + 14, fill=color, outline="#000000", width=2)
+            self.canvas.create_text(cx, cy, text="D", fill="#ffffff", font=("Arial", 12, "bold"))
+
+    def finish_start_positions(self):
+        for i, (x, y, joueur) in enumerate(self.start_positions):
+            Ouvrier(i, x, y, joueur, self.jeu)
+        self.mode = "play"
+        self.step = "select_worker"
+        self.selected_worker = None
+        self.move_target = None
+        self.build_target = None
+        self.jeu.joueur_actuel = 0
+        self.draw()
+        if self.jeu.joueur_actuel == self.bot_joueur:
+            self.root.after(300, self.run_bot_if_needed)
+
+    def select_bot_start_position(self):
+        available = [(x, y) for x in range(5) for y in range(5) if self.is_cell_free_for_start((x, y))]
+        if not available:
+            return
+        cell = random.choice(available)
+        self.start_positions.append((cell[0], cell[1], self.start_next_player))
+        if len(self.start_positions) >= 4:
+            self.finish_start_positions()
+        else:
+            self.start_next_player = 1 - self.start_next_player
+        self.draw()
+
     def draw(self):
         self.canvas.delete("all")
         order = sorted([(x, y) for x in range(5) for y in range(5)], key=lambda t: t[0] + t[1])
         for x, y in order:
             self.draw_cell(x, y, self.jeu.mat[x][y])
         self.draw_highlights()
+        if self.mode == "choose_start":
+            self.draw_start_positions()
         for worker in self.jeu.ouvriers:
             self.draw_worker(worker)
         self.update_labels()
@@ -456,10 +540,6 @@ class Grid3DView:
 
 def main_gui():
     jeu = Game()
-    Ouvrier(0, 0, 0, 0, jeu)
-    Ouvrier(1, 0, 1, 0, jeu)
-    Ouvrier(2, 4, 4, 1, jeu)
-    Ouvrier(3, 4, 3, 1, jeu)
     Grid3DView(jeu, bot_joueur=1)
 
 if __name__ == "__main__":
