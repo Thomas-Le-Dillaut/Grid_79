@@ -59,12 +59,13 @@ def jouer_intelligent():
                 if s > meilleur_score:
                     meilleur_score = s
                     meilleurs_coups = [coup]
+                    o=ouvrier
                 elif s == meilleur_score:
                     meilleurs_coups.append(coup)
 
             # Choisir parmi les meilleurs coups
             dx, dy, bx, by = random.choice(meilleurs_coups)
-
+            print(f"Play ({o.id}, ({dx}, {dy}), ({bx}, {by}))")
             ouvrier.deplacer(dx, dy)
             ouvrier.construire(bx, by)
 
