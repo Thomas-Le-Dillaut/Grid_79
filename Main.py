@@ -49,6 +49,7 @@ class Game:
 
 
 import tkinter as tk
+from tkinter import messagebox
 import random
 
 class Ouvrier:
@@ -78,11 +79,6 @@ class Ouvrier:
         if abs(x - self.x) <= 1 and abs(y - self.y) <= 1:
             if self.jeu.case_libre(x, y):
                 if self.jeu.mat[x][y] <= self.jeu.mat[self.x][self.y] + 1:
-
-                    if self.jeu.mat[x][y] == 3:
-                        print(f"🎉 Joueur {self.joueur} gagne !")  # Détecte la victoire.
-                        return True
-
                     self.x = x
                     self.y = y
                     self.jeu.positions[self.id] = (x, y)  # Met à jour la position.
@@ -126,12 +122,12 @@ def coups_possibles(ouvrier):
                     bx_abs = nx + bx
                     by_abs = ny + by
                     if jeu.est_dans_plateau(nx, ny) and jeu.est_dans_plateau(bx_abs, by_abs):
-                        if jeu.mat[bx_abs][by_abs] < 4:
-                            if jeu.case_libre(nx, ny) and jeu.mat[nx][ny] - jeu.mat[ouvrier.x][ouvrier.y] <= 1:
-                                if (nx, ny) != (ouvrier.x, ouvrier.y):
-                                    if jeu.case_libre(bx_abs, by_abs):
-                                        if not (bx == 0 and by == 0):
-                                            coups.append((nx, ny, bx_abs, by_abs))
+                        if jeu.case_libre(nx, ny) and jeu.mat[nx][ny] - jeu.mat[ouvrier.x][ouvrier.y] <= 1:
+                            if (nx, ny) != (ouvrier.x, ouvrier.y):
+                                if jeu.mat[nx][ny] == 3:
+                                    coups.append((nx, ny, bx_abs, by_abs))
+                                elif jeu.case_libre(bx_abs, by_abs) and jeu.mat[bx_abs][by_abs] < 4 and not (bx == 0 and by == 0):
+                                    coups.append((nx, ny, bx_abs, by_abs))
     return coups
 
 
@@ -159,7 +155,6 @@ def score_coup(ouvrier, dx, dy, bx, by):
 def jouer_intelligent(jeu):
     meilleurs_coups = []
     meilleur_score = -float("inf")
-    meilleur_ouvrier = None
 
     for ouvrier in jeu.ouvriers:
         if ouvrier.joueur == jeu.joueur_actuel:
@@ -169,18 +164,25 @@ def jouer_intelligent(jeu):
                 s = score_coup(ouvrier, dx, dy, bx, by)
                 if s > meilleur_score:
                     meilleur_score = s
-                    meilleurs_coups = [coup]
-                    meilleur_ouvrier = ouvrier
+                    meilleurs_coups = [(ouvrier, coup)]
                 elif s == meilleur_score:
-                    meilleurs_coups.append(coup)
+                    meilleurs_coups.append((ouvrier, coup))
 
-    if not meilleurs_coups or meilleur_ouvrier is None:
+    if not meilleurs_coups:
         return False
 
-    dx, dy, bx, by = random.choice(meilleurs_coups)
-    if meilleur_ouvrier.deplacer(dx, dy):
-        meilleur_ouvrier.construire(bx, by)
-        return True
+    random.shuffle(meilleurs_coups)
+    for ouvrier, coup in meilleurs_coups:
+        dx, dy, bx, by = coup
+        old_x, old_y = ouvrier.x, ouvrier.y
+        if ouvrier.deplacer(dx, dy):
+            if jeu.mat[dx][dy] == 3:
+                return True
+            if ouvrier.construire(bx, by):
+                return True
+            # rollback move if construction failed
+            ouvrier.x, ouvrier.y = old_x, old_y
+            jeu.positions[ouvrier.id] = (old_x, old_y)
     return False
 
 
@@ -195,6 +197,7 @@ class Grid3DView:
         self.selected_worker = None
         self.move_target = None
         self.build_target = None
+        self.game_over = False
         self.step = "select_worker"
         self.height_colors = ["#e0e0e0", "#a0a0a0", "#707070", "#404040", "#101010"]
         self.root = tk.Tk()
@@ -321,6 +324,8 @@ class Grid3DView:
             return False
         if self.jeu.mat[x][y] > self.jeu.mat[worker.x][worker.y] + 1:
             return False
+        if self.jeu.mat[x][y] == 3:
+            return True
         for dx in (-1, 0, 1):
             for dy in (-1, 0, 1):
                 if dx == 0 and dy == 0:
@@ -350,6 +355,8 @@ class Grid3DView:
         return self.can_build_cell(worker, move_cell, build_cell)
 
     def on_click(self, event):
+        if self.game_over:
+            return
         if self.jeu.verifier_defaite():
             return
         cell = self.point_to_cell(event.x, event.y)
@@ -377,11 +384,21 @@ class Grid3DView:
         elif self.step == "select_build":
             if self.selected_worker and self.move_target and self.valid_build(self.selected_worker, self.move_target, cell):
                 if self.selected_worker.deplacer(*self.move_target):
+                    # Vérifier victoire par déplacement sur étage 3
+                    if self.jeu.mat[self.selected_worker.x][self.selected_worker.y] == 3:
+                        # Déplacer l'ouvrier vers la destination finale (centre)
+                        self.selected_worker.x, self.selected_worker.y = 2, 2
+                        self.jeu.positions[self.selected_worker.id] = (2, 2)
+                        self.game_over = True
+                        self.status.config(text=f"Joueur {self.selected_worker.joueur} a gagné !")
+                        self.draw()
+                        # Afficher un message de victoire sur le canvas
+                        self.canvas.create_text(self.grid_x + self.grid_size / 2, self.grid_y + self.grid_size / 2, 
+                                                text=f"🎉 Joueur {self.selected_worker.joueur} a gagné ! 🎉", 
+                                                fill="#000000", font=("Arial", 24, "bold"), anchor="center")
+                        return
+                    # Sinon, construire
                     if self.selected_worker.construire(*cell):
-                        if self.jeu.mat[self.selected_worker.x][self.selected_worker.y] == 3:
-                            self.status.config(text=f"Joueur {self.selected_worker.joueur} a gagné !")
-                            self.draw()
-                            return
                         self.jeu.changer_joueur()
                         self.step = "select_worker"
                         self.selected_worker = None
@@ -413,13 +430,28 @@ class Grid3DView:
 
     def run_bot_if_needed(self):
         if self.jeu.joueur_actuel == self.bot_joueur and not self.jeu.verifier_defaite():
-            jouer_intelligent(self.jeu)
-            self.jeu.changer_joueur()
-            self.draw()
-            if self.jeu.verifier_defaite():
-                self.status.config(text=f"Le joueur {1 - self.bot_joueur} a gagné !")
+            if jouer_intelligent(self.jeu):
+                # Vérifier si le bot a gagné
+                if any(o.joueur == self.bot_joueur and self.jeu.mat[o.x][o.y] == 3 for o in self.jeu.ouvriers):
+                    self.game_over = True
+                    self.status.config(text=f"Joueur {self.bot_joueur} a gagné !")
+                    self.draw()
+                    # Afficher un message de victoire sur le canvas
+                    self.canvas.create_text(self.grid_x + self.grid_size / 2, self.grid_y + self.grid_size / 2, 
+                                            text=f"🎉 Joueur {self.bot_joueur} a gagné ! 🎉", 
+                                            fill="#ffff00", font=("Arial", 24, "bold"), anchor="center")
+                    return
+                self.jeu.changer_joueur()
+                self.draw()
+                if self.jeu.verifier_defaite():
+                    self.status.config(text=f"Le joueur {1 - self.bot_joueur} a gagné !")
+                else:
+                    self.root.after(300, self.run_bot_if_needed)
             else:
-                self.root.after(300, self.run_bot_if_needed)
+                # Le bot n'a pas pu jouer, défaite
+                self.game_over = True
+                self.status.config(text=f"Le joueur {self.bot_joueur} ne peut plus jouer. Défaite !")
+                self.draw()
 
 
 def main_gui():
